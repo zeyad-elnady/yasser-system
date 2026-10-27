@@ -1,0 +1,288 @@
+[
+  {
+    "id": "acc-yasser",
+    "name": "حـ/ ياسر",
+    "subtitle": "ورشة تصنيع وتفصيل",
+    "phone": "0501234567",
+    "currency": "ريال",
+    "startDate": "18/08/2026",
+    "endDate": "21/10/2026",
+    "transactions": [
+      {
+        "id": "tx-1",
+        "seq": 1,
+        "voucherNo": 11,
+        "date": "18/08/2026",
+        "voucherType": "سند قبض",
+        "details": "",
+        "debit": 0,
+        "credit": 73370,
+        "balance": 73370
+      },
+      {
+        "id": "tx-2",
+        "seq": 2,
+        "voucherNo": 53,
+        "date": "19/08/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 10000,
+        "credit": 0,
+        "balance": 63370
+      },
+      {
+        "id": "tx-3",
+        "seq": 3,
+        "voucherNo": 55,
+        "date": "19/08/2026",
+        "voucherType": "سند قبض",
+        "details": "36 قميص خاص",
+        "debit": 0,
+        "credit": 9000,
+        "balance": 72370
+      },
+      {
+        "id": "tx-4",
+        "seq": 4,
+        "voucherNo": 57,
+        "date": "19/08/2026",
+        "voucherType": "سند قبض",
+        "details": "89 قميص عرض",
+        "debit": 0,
+        "credit": 14240,
+        "balance": 86610
+      },
+      {
+        "id": "tx-5",
+        "seq": 5,
+        "voucherNo": 71,
+        "date": "25/08/2026",
+        "voucherType": "سند صرف",
+        "details": "غلطة خاص سادة",
+        "debit": 250,
+        "credit": 0,
+        "balance": 86360
+      },
+      {
+        "id": "tx-6",
+        "seq": 6,
+        "voucherNo": 81,
+        "date": "26/08/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 8000,
+        "credit": 0,
+        "balance": 78360
+      },
+      {
+        "id": "tx-7",
+        "seq": 7,
+        "voucherNo": 101,
+        "date": "02/09/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 8000,
+        "credit": 0,
+        "balance": 70360
+      },
+      {
+        "id": "tx-8",
+        "seq": 8,
+        "voucherNo": 119,
+        "date": "09/09/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 8000,
+        "credit": 0,
+        "balance": 62360
+      },
+      {
+        "id": "tx-9",
+        "seq": 9,
+        "voucherNo": 153,
+        "date": "16/09/2026",
+        "voucherType": "سند صرف",
+        "details": "",
+        "debit": 7000,
+        "credit": 0,
+        "balance": 55360
+      },
+      {
+        "id": "tx-10",
+        "seq": 10,
+        "voucherNo": 213,
+        "date": "23/09/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 5000,
+        "credit": 0,
+        "balance": 50360
+      },
+      {
+        "id": "tx-11",
+        "seq": 11,
+        "voucherNo": 229,
+        "date": "26/09/2026",
+        "voucherType": "سند صرف",
+        "details": "قميص زيتي وتيشيرت ابيض نص سوسته",
+        "debit": 400,
+        "credit": 0,
+        "balance": 49960
+      },
+      {
+        "id": "tx-12",
+        "seq": 12,
+        "voucherNo": 245,
+        "date": "30/09/2026",
+        "voucherType": "سند صرف",
+        "details": "",
+        "debit": 5000,
+        "credit": 0,
+        "balance": 44960
+      },
+      {
+        "id": "tx-13",
+        "seq": 13,
+        "voucherNo": 259,
+        "date": "07/10/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 5000,
+        "credit": 0,
+        "balance": 39960
+      },
+      {
+        "id": "tx-14",
+        "seq": 14,
+        "voucherNo": 265,
+        "date": "08/10/2026",
+        "voucherType": "سند قبض",
+        "details": "39 قميص خاص",
+        "debit": 0,
+        "credit": 9750,
+        "balance": 49710
+      },
+      {
+        "id": "tx-15",
+        "seq": 15,
+        "voucherNo": 267,
+        "date": "08/10/2026",
+        "voucherType": "سند قبض",
+        "details": "36 قميص بواقي",
+        "debit": 0,
+        "credit": 6400,
+        "balance": 56110
+      },
+      {
+        "id": "tx-16",
+        "seq": 16,
+        "voucherNo": 281,
+        "date": "14/10/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة",
+        "debit": 5000,
+        "credit": 0,
+        "balance": 51110
+      },
+      {
+        "id": "tx-17",
+        "seq": 17,
+        "voucherNo": 307,
+        "date": "17/10/2026",
+        "voucherType": "سند صرف",
+        "details": "قميص زيتي غلطة نسيج",
+        "debit": 180,
+        "credit": 0,
+        "balance": 50930
+      },
+      {
+        "id": "tx-18",
+        "seq": 18,
+        "voucherNo": 323,
+        "date": "21/10/2026",
+        "voucherType": "سند قبض",
+        "details": "24 قطيفة سوستة",
+        "debit": 0,
+        "credit": 11520,
+        "balance": 62450
+      },
+      {
+        "id": "tx-19",
+        "seq": 19,
+        "voucherNo": 325,
+        "date": "21/10/2026",
+        "voucherType": "سند قبض",
+        "details": "هودي قطيفة",
+        "debit": 0,
+        "credit": 11040,
+        "balance": 73490
+      },
+      {
+        "id": "tx-20",
+        "seq": 20,
+        "voucherNo": 327,
+        "date": "21/10/2026",
+        "voucherType": "سند قبض",
+        "details": "7 ترنج",
+        "debit": 0,
+        "credit": 2800,
+        "balance": 76290
+      },
+      {
+        "id": "tx-21",
+        "seq": 21,
+        "voucherNo": 329,
+        "date": "21/10/2026",
+        "voucherType": "سند صرف",
+        "details": "",
+        "debit": 7000,
+        "credit": 0,
+        "balance": 69290
+      }
+    ]
+  },
+  {
+    "id": "acc-mustafa",
+    "name": "حـ/ مصطفى الأحمدي",
+    "subtitle": "مورد أقمشة وخيوط",
+    "phone": "0559876543",
+    "currency": "ريال",
+    "startDate": "01/09/2026",
+    "endDate": "25/10/2026",
+    "transactions": [
+      {
+        "id": "tx-m1",
+        "seq": 1,
+        "voucherNo": 10,
+        "date": "01/09/2026",
+        "voucherType": "سند قبض",
+        "details": "رصيد افتتاحي سابق",
+        "debit": 0,
+        "credit": 25000,
+        "balance": 25000
+      },
+      {
+        "id": "tx-m2",
+        "seq": 2,
+        "voucherNo": 15,
+        "date": "10/09/2026",
+        "voucherType": "سند صرف",
+        "details": "دفعة نقدية بحوالة",
+        "debit": 15000,
+        "credit": 0,
+        "balance": 10000
+      },
+      {
+        "id": "tx-m3",
+        "seq": 3,
+        "voucherNo": 22,
+        "date": "25/09/2026",
+        "voucherType": "سند قبض",
+        "details": "توريد 10 توب قماش قطيفة",
+        "debit": 0,
+        "credit": 18500,
+        "balance": 28500
+      }
+    ]
+  }
+]
