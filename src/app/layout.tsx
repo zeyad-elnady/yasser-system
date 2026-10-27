@@ -11,14 +11,14 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   title: 'كشف حساب حـ/ ياسر',
-  description: 'كشف حساب إلكتروني معتمد متوافق 100% مع الجوال',
+  description: 'كشف حساب إلكتروني معتمد متوافق 100% مع جميع مقاسات الجوال',
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
+  userScalable: true,
   viewportFit: 'cover',
 };
 
@@ -28,8 +28,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
-      <body className="min-h-full font-sans antialiased bg-white text-slate-900 selection:bg-blue-600 selection:text-white">
+    <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`} suppressHydrationWarning>
+      <body
+        className="min-h-full font-sans antialiased bg-white text-slate-900 selection:bg-blue-600 selection:text-white"
+        suppressHydrationWarning
+      >
         {children}
       </body>
     </html>

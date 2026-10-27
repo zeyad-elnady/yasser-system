@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Account, Transaction, VoucherType } from '@/types';
+import { Account, Transaction } from '@/types';
 import { INITIAL_ACCOUNTS, INITIAL_TRANSACTIONS } from '@/lib/initialData';
 import { calculateBalances, formatAmount, getTotals } from '@/lib/calculations';
-import { StatementTable } from '@/components/StatementTable';
+import { StatementTable, SizeMode } from '@/components/StatementTable';
 import { AddVoucherModal } from '@/components/AddVoucherModal';
 import { AccountModal } from '@/components/AccountModal';
 import {
@@ -17,27 +17,36 @@ import {
   FileSpreadsheet,
   RotateCcw,
   UserPlus,
-  Users,
   X,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  FileText,
   Trash2,
   Edit,
+  Type,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 
 export default function MobileSinglePage() {
   const [accounts, setAccounts] = useState<Account[]>(INITIAL_ACCOUNTS);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('acc-yasser');
+  const [sizeMode, setSizeMode] = useState<SizeMode>('normal');
 
   // Modals & Bottom Sheets
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
+  const [isSizeMenuOpen, setIsSizeMenuOpen] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedRowAction, setSelectedRowAction] = useState<Transaction | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  // Auto-detect narrow screens on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 375) {
+        setSizeMode('compact');
+      }
+    }
+  }, []);
 
   // Load from local storage or API
   useEffect(() => {
@@ -178,16 +187,16 @@ export default function MobileSinglePage() {
 
   return (
     <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col font-sans select-none antialiased">
-      {/* 1. Top App Bar - Exactly matching screenshot 1 */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-300 px-3 py-2 flex items-center justify-between no-print">
-        {/* Left Action Buttons: Menu ⋮ and History Clock 🕒 */}
-        <div className="flex items-center gap-2">
+      {/* 1. Top App Bar - Exact layout matching screenshot 1 */}
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-300 px-2 sm:px-3 py-2 flex items-center justify-between no-print">
+        {/* Left Action Buttons: Menu ⋮ , History 🕒 , and Size/Zoom Adjuster Aa */}
+        <div className="flex items-center gap-1 sm:gap-2">
           <button
             onClick={() => setIsMenuOpen(true)}
             className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
             title="القائمة والخيارات"
           >
-            <MoreVertical className="w-6 h-6" />
+            <MoreVertical className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
 
           <button
@@ -195,14 +204,30 @@ export default function MobileSinglePage() {
             className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
             title="ملخص الحساب والإحصائيات"
           >
-            <Clock className="w-6 h-6" />
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Quick Size / Fit Toggle (Aa) */}
+          <button
+            onClick={() => setIsSizeMenuOpen(!isSizeMenuOpen)}
+            className={`px-1.5 py-0.5 rounded-lg border text-xs font-black transition flex items-center gap-0.5 ${
+              sizeMode === 'compact'
+                ? 'bg-blue-50 border-blue-400 text-blue-700'
+                : 'bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100'
+            }`}
+            title="تعديل مقاس الجدول ليناسب شاشتك"
+          >
+            <Type className="w-3.5 h-3.5" />
+            <span className="text-[10px] font-bold">
+              {sizeMode === 'compact' ? 'مضغوط' : sizeMode === 'large' ? 'كبير' : 'عادي'}
+            </span>
           </button>
         </div>
 
-        {/* Center Title: כشف حساب حـ/ ياسر */}
-        <div className="text-right flex-1 mx-2">
+        {/* Center Title: كشف حساب حـ/ ياسر */}
+        <div className="text-right flex-1 mx-1.5 sm:mx-2 truncate">
           <h1
-            className="text-[19px] sm:text-[21px] font-black tracking-tight text-slate-950 truncate"
+            className="text-[17px] sm:text-[20px] font-black tracking-tight text-slate-950 truncate"
             title={`كشف حساب ${currentAccount.name}`}
           >
             كشف حساب {currentAccount.name}
@@ -215,36 +240,79 @@ export default function MobileSinglePage() {
           className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
           title="رجوع / القائمة"
         >
-          <ArrowLeft className="w-6 h-6" />
+          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
       </header>
 
+      {/* Quick Size Mode Selector Dropdown */}
+      {isSizeMenuOpen && (
+        <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center justify-between text-xs font-bold no-print shadow-xs animate-in slide-in-from-top-2 duration-150">
+          <span className="text-slate-600">تعديل حجم الجدول ليناسب هاتفك:</span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => {
+                setSizeMode('compact');
+                setIsSizeMenuOpen(false);
+              }}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                sizeMode === 'compact' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-300 text-slate-700'
+              }`}
+            >
+              مضغوط (هواتف صغيرة)
+            </button>
+            <button
+              onClick={() => {
+                setSizeMode('normal');
+                setIsSizeMenuOpen(false);
+              }}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                sizeMode === 'normal' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-300 text-slate-700'
+              }`}
+            >
+              عادي
+            </button>
+            <button
+              onClick={() => {
+                setSizeMode('large');
+                setIsSizeMenuOpen(false);
+              }}
+              className={`px-2.5 py-1 rounded-md text-xs font-bold transition ${
+                sizeMode === 'large' ? 'bg-blue-600 text-white' : 'bg-white border border-slate-300 text-slate-700'
+              }`}
+            >
+              كبير
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. Subtitle Bar: من تاريخ ... إلى تاريخ ... */}
-      <div className="bg-white py-1 px-3 text-center border-b border-slate-300 text-[12px] sm:text-[13px] text-slate-700 font-bold select-none no-print">
+      <div className="bg-white py-1 px-2 text-center border-b border-slate-300 text-[11px] sm:text-[13px] text-slate-700 font-bold select-none no-print">
         <span>من تاريخ {currentAccount.startDate || '18/08/2026'}</span>
         <span className="mx-2">إلى تاريخ {currentAccount.endDate || '21/10/2026'}</span>
       </div>
 
       {/* 3. Main Full-Bleed Table */}
-      <main className="w-full flex-1 px-0 sm:px-2 pt-1 pb-20">
+      <main className="w-full flex-1 px-0 pt-0.5 pb-24">
         <StatementTable
           transactions={calculatedTransactions}
           currency={currentAccount.currency}
+          sizeMode={sizeMode}
           onRowClick={(tx) => setSelectedRowAction(tx)}
         />
       </main>
 
-      {/* 4. Sleek Floating Action Button (FAB) at bottom-left to add a voucher easily */}
-      <div className="fixed bottom-5 left-5 z-40 no-print">
+      {/* 4. Sleek Floating Action Button (FAB) at bottom-left */}
+      <div className="fixed bottom-4 left-4 z-40 no-print">
         <button
           onClick={() => {
             setEditingTransaction(null);
             setIsVoucherModalOpen(true);
           }}
-          className="w-13 h-13 rounded-full bg-[#0b57d0] hover:bg-blue-700 active:scale-95 text-white shadow-xl flex items-center justify-center transition-all"
+          className="w-12 h-12 rounded-full bg-[#0b57d0] hover:bg-blue-700 active:scale-95 text-white shadow-xl flex items-center justify-center transition-all border-2 border-white"
           title="إضافة سند جديد"
         >
-          <Plus className="w-7 h-7" />
+          <Plus className="w-6 h-6" />
         </button>
       </div>
 
@@ -255,7 +323,6 @@ export default function MobileSinglePage() {
             className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-3 animate-in slide-in-from-bottom-5 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-200">
               <h3 className="font-black text-base text-slate-900">خيارات كشف الحساب</h3>
               <button
@@ -266,7 +333,6 @@ export default function MobileSinglePage() {
               </button>
             </div>
 
-            {/* Menu Items */}
             <div className="space-y-1.5 pt-1">
               <button
                 onClick={() => {
@@ -314,6 +380,39 @@ export default function MobileSinglePage() {
                 <RotateCcw className="w-5 h-5 text-amber-600" />
                 <span>استعادة بيانات الصورة الأصلية (21 حركة)</span>
               </button>
+
+              {/* Adjust Table Size */}
+              <div className="pt-2 border-t border-slate-200">
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  مقاس الجدول للشاشة:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setSizeMode('compact')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition ${
+                      sizeMode === 'compact' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    مضغوط
+                  </button>
+                  <button
+                    onClick={() => setSizeMode('normal')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition ${
+                      sizeMode === 'normal' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    عادي
+                  </button>
+                  <button
+                    onClick={() => setSizeMode('large')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition ${
+                      sizeMode === 'large' ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    كبير
+                  </button>
+                </div>
+              </div>
 
               {/* Account Switcher */}
               <div className="pt-2 border-t border-slate-200">
