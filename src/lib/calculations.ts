@@ -46,3 +46,4 @@ export function formatAmount(amount?: number, showZero = false): string {
   if (amount === 0 && !showZero) return '';
   return amount.toLocaleString('en-US');
 }
+

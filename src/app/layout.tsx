@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cairo } from 'next/font/google';
 import './globals.css';
 
@@ -10,8 +10,16 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: 'نظام كشف الحسابات والسندات | كشف حساب حـ/ ياسر',
-  description: 'نظام إدارة كشوف الحسابات وسندات القبض والصرف المتكامل للورش والمصانع والتجار',
+  title: 'كشف حساب حـ/ ياسر',
+  description: 'كشف حساب إلكتروني معتمد متوافق 100% مع الجوال',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -21,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" className={`${cairo.variable} h-full`}>
-      <body className="min-h-full font-sans antialiased bg-slate-100 text-slate-900 selection:bg-blue-600 selection:text-white">
+      <body className="min-h-full font-sans antialiased bg-white text-slate-900 selection:bg-blue-600 selection:text-white">
         {children}
       </body>
     </html>

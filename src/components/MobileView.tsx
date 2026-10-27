@@ -106,7 +106,6 @@ export const MobileView: React.FC<MobileViewProps> = ({
         <StatementTable
           transactions={transactions}
           currency={account.currency}
-          isEditable={false}
         />
       </div>
 
@@ -134,3 +133,4 @@ export const MobileView: React.FC<MobileViewProps> = ({
     </div>
   );
 };
+

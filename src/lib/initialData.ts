@@ -290,3 +290,4 @@ export const INITIAL_ACCOUNTS: Account[] = [
     ],
   },
 ];
+

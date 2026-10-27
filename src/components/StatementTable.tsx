@@ -4,49 +4,43 @@ import React from 'react';
 import { Transaction } from '@/types';
 import { formatAmount, getTotals } from '@/lib/calculations';
 import { formatTafqeet } from '@/lib/tafqeet';
-import { Trash2, Edit2 } from 'lucide-react';
 
 interface StatementTableProps {
   transactions: Transaction[];
   currency?: string;
-  isEditable?: boolean;
-  onEdit?: (tx: Transaction) => void;
-  onDelete?: (id: string) => void;
+  onRowClick?: (tx: Transaction) => void;
 }
 
 export const StatementTable: React.FC<StatementTableProps> = ({
   transactions,
   currency = 'ريال',
-  isEditable = false,
-  onEdit,
-  onDelete,
+  onRowClick,
 }) => {
   const totals = getTotals(transactions);
   const tafqeetText = formatTafqeet(totals.finalBalance, currency);
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* The Exact Table matching the screenshot */}
-      <div className="w-full overflow-x-auto">
-        <table className="statement-table border-collapse text-[13px] md:text-[14px] text-center w-full">
+      {/* 100% Mobile Table */}
+      <div className="w-full overflow-hidden">
+        <table className="statement-table w-full border-collapse text-center">
           <thead>
-            <tr className="bg-[#1059c2] text-white">
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[70px]">الرصيد</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[75px]">له</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[75px]">عليه</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[140px] max-w-[240px]">التفاصيل</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[75px]">نوع السند</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[85px]">التاريخ</th>
-              <th className="py-2.5 px-2 border border-slate-500 font-bold min-w-[45px]">الرقم</th>
-              <th className="py-2.5 px-1.5 border border-slate-500 font-bold w-[32px]">م</th>
-              {isEditable && <th className="py-2.5 px-1 border border-slate-500 font-bold w-[65px] no-print">إجراءات</th>}
+            <tr className="bg-[#0b57d0] text-white">
+              <th className="font-bold border border-slate-600 w-[12%]">الرصيد</th>
+              <th className="font-bold border border-slate-600 w-[11%]">له</th>
+              <th className="font-bold border border-slate-600 w-[11%]">عليه</th>
+              <th className="font-bold border border-slate-600 w-[24%]">التفاصيل</th>
+              <th className="font-bold border border-slate-600 w-[14%]">نوع السند</th>
+              <th className="font-bold border border-slate-600 w-[17%]">التاريخ</th>
+              <th className="font-bold border border-slate-600 w-[7%]">الرقم</th>
+              <th className="font-bold border border-slate-600 w-[4%]">م</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-400">
+          <tbody className="bg-white">
             {transactions.length === 0 ? (
               <tr>
-                <td colSpan={isEditable ? 9 : 8} className="py-6 text-center text-slate-500">
-                  لا توجد حركات مسجلة في هذا الكشف
+                <td colSpan={8} className="py-8 text-center text-slate-500 font-medium">
+                  لا توجد حركات مسجلة
                 </td>
               </tr>
             ) : (
@@ -54,94 +48,74 @@ export const StatementTable: React.FC<StatementTableProps> = ({
                 return (
                   <tr
                     key={tx.id || idx}
-                    className="hover:bg-blue-50/50 transition-colors border-b border-slate-400"
+                    onClick={() => onRowClick?.(tx)}
+                    className="hover:bg-blue-50/70 active:bg-blue-100 transition-colors cursor-pointer select-none border-b border-slate-400"
                   >
                     {/* الرصيد (Balance) - Bold Dark Blue */}
-                    <td className="py-1.5 px-2 border border-slate-400 font-bold text-[#123970] whitespace-nowrap">
+                    <td className="font-bold text-[#0f3460] whitespace-nowrap">
                       {formatAmount(tx.balance, true)}
                     </td>
 
-                    {/* له (Credit) - Bold Blue */}
-                    <td className="py-1.5 px-2 border border-slate-400 font-bold text-[#123970] whitespace-nowrap">
+                    {/* له (Credit) - Bold Dark Blue */}
+                    <td className="font-bold text-[#0f3460] whitespace-nowrap">
                       {formatAmount(tx.credit)}
                     </td>
 
                     {/* عليه (Debit) - Bold Red */}
-                    <td className="py-1.5 px-2 border border-slate-400 font-bold text-[#d00000] whitespace-nowrap">
+                    <td className="font-bold text-[#dc2626] whitespace-nowrap">
                       {formatAmount(tx.debit)}
                     </td>
 
                     {/* التفاصيل (Details) */}
-                    <td className="py-1.5 px-2 border border-slate-400 font-medium text-slate-900 text-center">
+                    <td className="font-semibold text-slate-900 leading-tight px-1">
                       {tx.details || ''}
                     </td>
 
                     {/* نوع السند (Voucher Type) */}
-                    <td className="py-1.5 px-2 border border-slate-400 font-medium text-slate-800 whitespace-nowrap">
+                    <td className="font-semibold text-slate-800 whitespace-nowrap">
                       {tx.voucherType}
                     </td>
 
                     {/* التاريخ (Date) */}
-                    <td className="py-1.5 px-1.5 border border-slate-400 font-medium text-slate-800 whitespace-nowrap text-xs md:text-[13px]">
+                    <td className="font-semibold text-slate-800 whitespace-nowrap text-[10.5px] sm:text-[12px]">
                       {tx.date}
                     </td>
 
                     {/* الرقم (Voucher No) */}
-                    <td className="py-1.5 px-1 border border-slate-400 font-medium text-slate-800 whitespace-nowrap">
+                    <td className="font-semibold text-slate-800 whitespace-nowrap">
                       {tx.voucherNo}
                     </td>
 
                     {/* م (Index) */}
-                    <td className="py-1.5 px-1 border border-slate-400 font-medium text-slate-600 whitespace-nowrap">
+                    <td className="font-semibold text-slate-600 whitespace-nowrap text-[10.5px] sm:text-[12px]">
                       {tx.seq ?? idx + 1}
                     </td>
-
-                    {isEditable && (
-                      <td className="py-1 px-1 border border-slate-400 whitespace-nowrap no-print text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => onEdit?.(tx)}
-                            title="تعديل السند"
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => onDelete?.(tx.id)}
-                            title="حذف السند"
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-100 rounded"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    )}
                   </tr>
                 );
               })
             )}
 
-            {/* Total Row (الاجمالي) - Exact Cyan Highlight as in Screenshot */}
-            <tr className="font-bold border-t-2 border-slate-600 text-slate-900">
+            {/* Total Row (الاجمالي) - Exact Cyan Highlight (#00e5ff) as in Screenshot */}
+            <tr className="font-bold border-t-2 border-slate-700">
               {/* الرصيد الإجمالي */}
-              <td className="py-2 px-2 border border-slate-500 bg-[#00e5ff] text-slate-950 text-center font-bold text-[14px] md:text-[15px]">
+              <td className="bg-[#00e5ff] text-slate-950 font-black text-[12px] sm:text-[14px] border border-slate-600 whitespace-nowrap">
                 {formatAmount(totals.finalBalance, true)}
               </td>
 
               {/* إجمالي له */}
-              <td className="py-2 px-2 border border-slate-500 bg-[#00e5ff] text-slate-950 text-center font-bold text-[14px] md:text-[15px]">
+              <td className="bg-[#00e5ff] text-slate-950 font-black text-[12px] sm:text-[14px] border border-slate-600 whitespace-nowrap">
                 {formatAmount(totals.totalCredit, true)}
               </td>
 
               {/* إجمالي عليه */}
-              <td className="py-2 px-2 border border-slate-500 bg-[#00e5ff] text-slate-950 text-center font-bold text-[14px] md:text-[15px]">
+              <td className="bg-[#00e5ff] text-slate-950 font-black text-[12px] sm:text-[14px] border border-slate-600 whitespace-nowrap">
                 {formatAmount(totals.totalDebit, true)}
               </td>
 
-              {/* كلمة الاجمالي ممتدة */}
+              {/* كلمة الاجمالي ممتدة عبر الـ 5 أعمدة */}
               <td
-                colSpan={isEditable ? 6 : 5}
-                className="py-2 px-3 border border-slate-500 text-center bg-white font-extrabold text-[15px] text-slate-900"
+                colSpan={5}
+                className="py-1.5 border border-slate-600 text-center bg-white font-black text-[13px] sm:text-[15px] text-slate-900"
               >
                 الاجمالي
               </td>
@@ -153,13 +127,13 @@ export const StatementTable: React.FC<StatementTableProps> = ({
       {/* Tafqeet & Footer Disclaimer under the table */}
       <div className="w-full mt-3 px-2 flex flex-col items-center text-center">
         {/* Tafqeet in Bold Blue matching the screenshot */}
-        <div className="text-[#1059c2] font-bold text-[15px] md:text-[16px] tracking-wide mb-1.5">
+        <div className="text-[#0b57d0] font-black text-[14px] sm:text-[16px] tracking-wide mb-1 leading-snug">
           {tafqeetText}
         </div>
 
         {/* Accounting disclaimer note */}
-        <div className="text-[12px] md:text-[13px] text-slate-500 font-medium">
-          نرجو مراجعة كشف الحساب ومطابقته والإشعار بأي ملاحظة خلال 3 أيام وإلا يعتبر الكشف صحيحاً ومعتمداً.
+        <div className="text-[11px] sm:text-[12px] text-slate-600 font-medium leading-relaxed max-w-md">
+          نرجو مراجعة الحساب ومطابقته والإشعار بأي ملاحظة خلال 3 أيام وإلا يعتبر الكشف صحيحاً ومعتمداً.
         </div>
       </div>
     </div>

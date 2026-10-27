@@ -135,3 +135,4 @@ export function formatTafqeet(balance: number, currency = 'ريال'): string {
 
   return `${prefix} : ${words} ${currency}`;
 }
+

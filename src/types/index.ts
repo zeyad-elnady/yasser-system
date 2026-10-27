@@ -26,3 +26,4 @@ export interface Account {
 }
 
 export type ViewMode = 'exact-mobile' | 'dashboard' | 'print';
+

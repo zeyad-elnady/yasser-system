@@ -1,51 +1,45 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Account, Transaction, ViewMode, VoucherType } from '@/types';
+import { Account, Transaction, VoucherType } from '@/types';
 import { INITIAL_ACCOUNTS, INITIAL_TRANSACTIONS } from '@/lib/initialData';
 import { calculateBalances, formatAmount, getTotals } from '@/lib/calculations';
 import { StatementTable } from '@/components/StatementTable';
-import { MobileView } from '@/components/MobileView';
 import { AddVoucherModal } from '@/components/AddVoucherModal';
 import { AccountModal } from '@/components/AccountModal';
-import { PrintHeader, PrintFooter } from '@/components/PrintHeader';
 import {
-  Smartphone,
-  LayoutDashboard,
+  ArrowLeft,
+  Clock,
+  MoreVertical,
+  Plus,
   Printer,
-  PlusCircle,
-  MinusCircle,
-  Search,
-  Filter,
-  FileSpreadsheet,
   Share2,
+  FileSpreadsheet,
   RotateCcw,
   UserPlus,
   Users,
-  ChevronDown,
-  Calendar,
-  CheckCircle2,
+  X,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
   FileText,
+  Trash2,
+  Edit,
 } from 'lucide-react';
 
-export default function HomePage() {
+export default function MobileSinglePage() {
   const [accounts, setAccounts] = useState<Account[]>(INITIAL_ACCOUNTS);
   const [selectedAccountId, setSelectedAccountId] = useState<string>('acc-yasser');
-  const [viewMode, setViewMode] = useState<ViewMode>('exact-mobile');
 
-  // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'ALL' | VoucherType>('ALL');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-
-  // Modals
+  // Modals & Bottom Sheets
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isStatsOpen, setIsStatsOpen] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+  const [selectedRowAction, setSelectedRowAction] = useState<Transaction | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
-  // Load from local storage or API on mount
+  // Load from local storage or API
   useEffect(() => {
     try {
       const saved = localStorage.getItem('yasser_system_accounts');
@@ -57,10 +51,9 @@ export default function HomePage() {
         }
       }
     } catch (e) {
-      console.error('Error loading accounts:', e);
+      console.error(e);
     }
 
-    // Try fetching from server API
     fetch('/api/data')
       .then((res) => res.json())
       .then((data) => {
@@ -71,7 +64,6 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
-  // Save to local storage & API
   const saveAccounts = (newAccounts: Account[]) => {
     setAccounts(newAccounts);
     try {
@@ -82,7 +74,7 @@ export default function HomePage() {
         body: JSON.stringify(newAccounts),
       }).catch(() => {});
     } catch (e) {
-      console.error('Error saving:', e);
+      console.error(e);
     }
   };
 
@@ -90,74 +82,45 @@ export default function HomePage() {
     return accounts.find((a) => a.id === selectedAccountId) || accounts[0];
   }, [accounts, selectedAccountId]);
 
-  // All transactions with calculated running balance
-  const fullCalculatedTransactions = useMemo(() => {
+  // Full transactions with running balance
+  const calculatedTransactions = useMemo(() => {
     return calculateBalances(currentAccount.transactions || []);
   }, [currentAccount]);
 
-  // Filtered transactions for display
-  const displayTransactions = useMemo(() => {
-    let list = fullCalculatedTransactions;
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      list = list.filter(
-        (tx) =>
-          tx.details.toLowerCase().includes(q) ||
-          String(tx.voucherNo).includes(q) ||
-          tx.date.includes(q)
-      );
-    }
-
-    if (typeFilter !== 'ALL') {
-      list = list.filter((tx) => tx.voucherType === typeFilter);
-    }
-
-    return list;
-  }, [fullCalculatedTransactions, searchQuery, typeFilter]);
-
   const totals = useMemo(() => {
-    return getTotals(displayTransactions);
-  }, [displayTransactions]);
+    return getTotals(calculatedTransactions);
+  }, [calculatedTransactions]);
 
-  // Highest voucher number
   const nextVoucherNo = useMemo(() => {
-    const numbers = (currentAccount.transactions || [])
+    const nums = (currentAccount.transactions || [])
       .map((t) => Number(t.voucherNo))
       .filter((n) => !isNaN(n));
-    return numbers.length > 0 ? Math.max(...numbers) + 1 : 1;
+    return nums.length > 0 ? Math.max(...nums) + 1 : 1;
   }, [currentAccount]);
 
-  // Handlers
+  // Actions
   const handleSaveTransaction = (txData: Partial<Transaction>) => {
-    const updatedAccounts = accounts.map((acc) => {
+    const updated = accounts.map((acc) => {
       if (acc.id === currentAccount.id) {
-        let updatedTxs = [...acc.transactions];
+        let txs = [...acc.transactions];
         if (editingTransaction) {
-          // Edit
-          updatedTxs = updatedTxs.map((t) =>
-            t.id === editingTransaction.id ? ({ ...t, ...txData } as Transaction) : t
-          );
+          txs = txs.map((t) => (t.id === editingTransaction.id ? ({ ...t, ...txData } as Transaction) : t));
         } else {
-          // Add new
-          updatedTxs.push(txData as Transaction);
+          txs.push(txData as Transaction);
         }
-        return {
-          ...acc,
-          transactions: updatedTxs,
-        };
+        return { ...acc, transactions: txs };
       }
       return acc;
     });
 
-    saveAccounts(updatedAccounts);
+    saveAccounts(updated);
     setEditingTransaction(null);
+    setSelectedRowAction(null);
   };
 
   const handleDeleteTransaction = (id: string) => {
-    if (!confirm('هل أنت متأكد من رغبتك في حذف هذا السند؟')) return;
-
-    const updatedAccounts = accounts.map((acc) => {
+    if (!confirm('هل أنت متأكد من حذف هذا السند؟')) return;
+    const updated = accounts.map((acc) => {
       if (acc.id === currentAccount.id) {
         return {
           ...acc,
@@ -166,42 +129,13 @@ export default function HomePage() {
       }
       return acc;
     });
-
-    saveAccounts(updatedAccounts);
+    saveAccounts(updated);
+    setSelectedRowAction(null);
   };
 
-  const handleSaveAccount = (accountData: Partial<Account>) => {
-    let updatedAccounts: Account[];
-    if (editingAccount) {
-      updatedAccounts = accounts.map((a) =>
-        a.id === editingAccount.id ? ({ ...a, ...accountData } as Account) : a
-      );
-    } else {
-      const newAcc: Account = {
-        id: accountData.id || `acc-${Date.now()}`,
-        name: accountData.name || 'حساب جديد',
-        subtitle: accountData.subtitle || 'ورشة تفصيل',
-        phone: accountData.phone || '',
-        currency: accountData.currency || 'ريال',
-        startDate: '01/01/2026',
-        endDate: '31/12/2026',
-        transactions: [],
-      };
-      updatedAccounts = [...accounts, newAcc];
-      setSelectedAccountId(newAcc.id);
-    }
-
-    saveAccounts(updatedAccounts);
-    setEditingAccount(null);
-  };
-
-  const handleResetToScreenshotData = () => {
-    if (
-      confirm(
-        'هل تريد استعادة بيانات كشف حساب ياسر الأصلية المطابقة للصورة تماماً (21 حركة برصيد 69,290)؟'
-      )
-    ) {
-      const updatedAccounts = accounts.map((acc) => {
+  const handleResetToScreenshot = () => {
+    if (confirm('هل تريد استعادة بيانات كشف حساب ياسر الأصلية (21 حركة برصيد 69,290)؟')) {
+      const updated = accounts.map((acc) => {
         if (acc.id === 'acc-yasser') {
           return {
             ...acc,
@@ -212,370 +146,343 @@ export default function HomePage() {
         }
         return acc;
       });
-      saveAccounts(updatedAccounts);
+      saveAccounts(updated);
       setSelectedAccountId('acc-yasser');
-      setSearchQuery('');
-      setTypeFilter('ALL');
+      setIsMenuOpen(false);
     }
   };
 
-  // Export to CSV
+  const handleWhatsAppShare = () => {
+    const msg = `*كشف حساب ${currentAccount.name}*\nمن ${currentAccount.startDate || '18/08/2026'} إلى ${currentAccount.endDate || '21/10/2026'}\n\n• إجمالي له: ${formatAmount(totals.totalCredit)} ${currentAccount.currency}\n• إجمالي عليه: ${formatAmount(totals.totalDebit)} ${currentAccount.currency}\n• *الرصيد: ${formatAmount(totals.finalBalance)} ${currentAccount.currency} (${totals.finalBalance >= 0 ? 'لكم' : 'عليكم'})*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    setIsMenuOpen(false);
+  };
+
   const handleExportCSV = () => {
-    let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
-    csvContent += 'م,الرقم,التاريخ,نوع السند,التفاصيل,عليه,له,الرصيد\n';
-
-    displayTransactions.forEach((tx) => {
-      const row = [
-        tx.seq,
-        tx.voucherNo,
-        tx.date,
-        tx.voucherType,
-        `"${(tx.details || '').replace(/"/g, '""')}"`,
-        tx.debit || '',
-        tx.credit || '',
-        tx.balance || '',
-      ].join(',');
-      csvContent += row + '\n';
+    let csv = 'data:text/csv;charset=utf-8,\uFEFF';
+    csv += 'م,الرقم,التاريخ,نوع السند,التفاصيل,عليه,له,الرصيد\n';
+    calculatedTransactions.forEach((t) => {
+      csv += `${t.seq},${t.voucherNo},${t.date},${t.voucherType},"${(t.details || '').replace(/"/g, '""')}",${t.debit || ''},${t.credit || ''},${t.balance || ''}\n`;
     });
+    csv += `,,,الاجمالي,"",${totals.totalDebit},${totals.totalCredit},${totals.finalBalance}\n`;
 
-    csvContent += `,,,الاجمالي,"",${totals.totalDebit},${totals.totalCredit},${totals.finalBalance}\n`;
-
-    const encodedUri = encodeURI(csvContent);
+    const encoded = encodeURI(csv);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `كشف_حساب_${currentAccount.name}.csv`);
+    link.href = encoded;
+    link.download = `كشف_حساب_${currentAccount.name}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  // WhatsApp share
-  const handleWhatsAppShare = () => {
-    const title = `*كشف حساب ${currentAccount.name}*`;
-    const period = `الفترة: من ${currentAccount.startDate || '18/08/2026'} إلى ${currentAccount.endDate || '21/10/2026'}`;
-    const totalsText = `• إجمالي له (دائن): ${formatAmount(totals.totalCredit)} ${currentAccount.currency}\n• إجمالي عليه (مدين): ${formatAmount(totals.totalDebit)} ${currentAccount.currency}\n• *الرصيد النهائي: ${formatAmount(totals.finalBalance)} ${currentAccount.currency} (${totals.finalBalance >= 0 ? 'لكم' : 'عليكم'})*`;
-    const message = `${title}\n${period}\n\n${totalsText}\n\nنرجو مراجعة الحساب ومطابقته.`;
-
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    setIsMenuOpen(false);
   };
 
   return (
-    <main className="min-h-screen bg-slate-100 flex flex-col font-sans pb-16">
-      {/* 1. Global Navigation Top Bar */}
-      <header className="bg-slate-900 text-white shadow-md no-print sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Logo & Title */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
-              <FileText className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-lg font-black tracking-wide">نظام كشف الحسابات</h1>
-                <span className="text-[11px] bg-blue-500/20 text-blue-300 font-bold px-2 py-0.5 rounded-full border border-blue-400/30">
-                  yasser-system
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">إدارة كشوف الحسابات وسندات القبض والصرف</p>
-            </div>
-          </div>
+    <div className="w-full min-h-screen bg-white text-slate-900 flex flex-col font-sans select-none antialiased">
+      {/* 1. Top App Bar - Exactly matching screenshot 1 */}
+      <header className="sticky top-0 z-30 bg-white border-b border-slate-300 px-3 py-2 flex items-center justify-between no-print">
+        {/* Left Action Buttons: Menu ⋮ and History Clock 🕒 */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
+            title="القائمة والخيارات"
+          >
+            <MoreVertical className="w-6 h-6" />
+          </button>
 
-          {/* Account Selector */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-slate-800 border border-slate-700 rounded-xl px-3 py-1.5 gap-2 text-sm">
-              <Users className="w-4 h-4 text-blue-400" />
-              <select
-                value={selectedAccountId}
-                onChange={(e) => setSelectedAccountId(e.target.value)}
-                className="bg-transparent text-white font-bold outline-none cursor-pointer text-sm"
-              >
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id} className="bg-slate-900 text-white">
-                    {acc.name} {acc.subtitle ? `(${acc.subtitle})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => {
-                setEditingAccount(null);
-                setIsAccountModalOpen(true);
-              }}
-              title="إضافة حساب جديد"
-              className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl border border-slate-700 transition"
-            >
-              <UserPlus className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* View Mode Switcher Pills */}
-          <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700">
-            <button
-              onClick={() => setViewMode('exact-mobile')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                viewMode === 'exact-mobile'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              <Smartphone className="w-4 h-4" />
-              <span>عرض الجوال (مطابق للصورة)</span>
-            </button>
-
-            <button
-              onClick={() => setViewMode('dashboard')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                viewMode === 'dashboard'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>لوحة التحكم الكاملة</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setViewMode('print');
-                setTimeout(() => window.print(), 200);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-300 hover:text-white transition"
-            >
-              <Printer className="w-4 h-4" />
-              <span>طباعة كشف</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsStatsOpen(true)}
+            className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
+            title="ملخص الحساب والإحصائيات"
+          >
+            <Clock className="w-6 h-6" />
+          </button>
         </div>
+
+        {/* Center Title: כشف حساب حـ/ ياسر */}
+        <div className="text-right flex-1 mx-2">
+          <h1
+            className="text-[19px] sm:text-[21px] font-black tracking-tight text-slate-950 truncate"
+            title={`كشف حساب ${currentAccount.name}`}
+          >
+            كشف حساب {currentAccount.name}
+          </h1>
+        </div>
+
+        {/* Right Action: Back Arrow ← */}
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="p-1.5 text-slate-800 hover:bg-slate-100 active:bg-slate-200 rounded-full transition"
+          title="رجوع / القائمة"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
       </header>
 
-      {/* 2. Action Sub-Bar */}
-      <section className="bg-white border-b border-slate-200 shadow-xs no-print">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
-          {/* Quick Buttons: Add Voucher */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                setEditingTransaction(null);
-                setIsVoucherModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-xs transition"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>إضافة قيد / سند جديد</span>
-            </button>
+      {/* 2. Subtitle Bar: من تاريخ ... إلى تاريخ ... */}
+      <div className="bg-white py-1 px-3 text-center border-b border-slate-300 text-[12px] sm:text-[13px] text-slate-700 font-bold select-none no-print">
+        <span>من تاريخ {currentAccount.startDate || '18/08/2026'}</span>
+        <span className="mx-2">إلى تاريخ {currentAccount.endDate || '21/10/2026'}</span>
+      </div>
 
-            <button
-              onClick={handleWhatsAppShare}
-              className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-xs transition"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>مشاركة واتساب</span>
-            </button>
+      {/* 3. Main Full-Bleed Table */}
+      <main className="w-full flex-1 px-0 sm:px-2 pt-1 pb-20">
+        <StatementTable
+          transactions={calculatedTransactions}
+          currency={currentAccount.currency}
+          onRowClick={(tx) => setSelectedRowAction(tx)}
+        />
+      </main>
 
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-sm font-bold shadow-xs transition"
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              <span>تصدير Excel</span>
-            </button>
+      {/* 4. Sleek Floating Action Button (FAB) at bottom-left to add a voucher easily */}
+      <div className="fixed bottom-5 left-5 z-40 no-print">
+        <button
+          onClick={() => {
+            setEditingTransaction(null);
+            setIsVoucherModalOpen(true);
+          }}
+          className="w-13 h-13 rounded-full bg-[#0b57d0] hover:bg-blue-700 active:scale-95 text-white shadow-xl flex items-center justify-center transition-all"
+          title="إضافة سند جديد"
+        >
+          <Plus className="w-7 h-7" />
+        </button>
+      </div>
 
-            <button
-              onClick={handleResetToScreenshotData}
-              title="استعادة كشف حساب ياسر من الصورة"
-              className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 rounded-xl text-xs font-bold transition"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>استعادة بيانات الصورة (21 حركة)</span>
-            </button>
-          </div>
-
-          {/* Search & Type Filter */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="w-4 h-4 absolute right-3 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="بحث في التفاصيل أو الرقم..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-56 pl-3 pr-9 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-              />
+      {/* 5. Mobile Bottom Sheet: Menu Options (⋮) */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs no-print">
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-3 animate-in slide-in-from-bottom-5 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="font-black text-base text-slate-900">خيارات كشف الحساب</h3>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-1 rounded-full text-slate-500 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as any)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">جميع السندات</option>
-              <option value="سند صرف">سند صرف (عليه) فقط</option>
-              <option value="سند قبض">سند قبض (له) فقط</option>
-            </select>
-          </div>
-        </div>
-      </section>
+            {/* Menu Items */}
+            <div className="space-y-1.5 pt-1">
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setEditingTransaction(null);
+                  setIsVoucherModalOpen(true);
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition text-sm"
+              >
+                <Plus className="w-5 h-5" />
+                <span>إضافة قيد / سند جديد</span>
+              </button>
 
-      {/* 3. Summary Statistics Cards */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-2 no-print w-full">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {/* له */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-500 font-bold">إجمالي له (دائن)</p>
-              <h3 className="text-xl font-black text-blue-700 mt-0.5">
-                {formatAmount(totals.totalCredit, true)}
-                <span className="text-xs font-semibold text-slate-500 mr-1">
-                  {currentAccount.currency}
-                </span>
-              </h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-black text-sm">
-              له
-            </div>
-          </div>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setTimeout(() => window.print(), 100);
+                }}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-slate-800 font-bold transition text-sm"
+              >
+                <Printer className="w-5 h-5 text-slate-600" />
+                <span>طباعة كشف الحساب / تصدير PDF</span>
+              </button>
 
-          {/* عليه */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-500 font-bold">إجمالي عليه (مدين)</p>
-              <h3 className="text-xl font-black text-red-600 mt-0.5">
-                {formatAmount(totals.totalDebit, true)}
-                <span className="text-xs font-semibold text-slate-500 mr-1">
-                  {currentAccount.currency}
-                </span>
-              </h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center text-red-600 font-black text-sm">
-              عليه
-            </div>
-          </div>
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-emerald-700 font-bold transition text-sm"
+              >
+                <Share2 className="w-5 h-5 text-emerald-600" />
+                <span>مشاركة كشف الحساب عبر WhatsApp</span>
+              </button>
 
-          {/* الرصيد النهائي */}
-          <div className="bg-white p-3.5 rounded-2xl border-2 border-[#00e5ff] shadow-xs flex items-center justify-between bg-gradient-to-r from-cyan-50/50 to-white">
-            <div>
-              <p className="text-xs text-slate-600 font-bold">الرصيد الصافي المتبقي</p>
-              <h3 className="text-xl font-black text-slate-900 mt-0.5">
-                {formatAmount(totals.finalBalance, true)}
-                <span className="text-xs font-bold text-blue-700 mr-1">
-                  {totals.finalBalance >= 0 ? '(لكم)' : '(عليكم)'}
-                </span>
-              </h3>
-            </div>
-            <div className="px-2 py-1 rounded-lg bg-[#00e5ff] text-slate-900 font-extrabold text-xs shadow-xs">
-              مطابق للصورة
-            </div>
-          </div>
+              <button
+                onClick={handleExportCSV}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 text-slate-800 font-bold transition text-sm"
+              >
+                <FileSpreadsheet className="w-5 h-5 text-slate-600" />
+                <span>تصدير ملف Excel (CSV)</span>
+              </button>
 
-          {/* عدد السندات */}
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-500 font-bold">عدد القيود والحركات</p>
-              <h3 className="text-xl font-black text-slate-800 mt-0.5">
-                {displayTransactions.length}{' '}
-                <span className="text-xs font-medium text-slate-500">سند</span>
-              </h3>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-sm">
-              #
-            </div>
-          </div>
-        </div>
-      </section>
+              <button
+                onClick={handleResetToScreenshot}
+                className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-amber-50 text-amber-800 font-bold transition text-sm"
+              >
+                <RotateCcw className="w-5 h-5 text-amber-600" />
+                <span>استعادة بيانات الصورة الأصلية (21 حركة)</span>
+              </button>
 
-      {/* 4. Main Body Content Based on Active View Mode */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full flex-1">
-        {/* Printable Header (visible only on print) */}
-        <PrintHeader account={currentAccount} />
+              {/* Account Switcher */}
+              <div className="pt-2 border-t border-slate-200">
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  تبديل الحساب:
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedAccountId}
+                    onChange={(e) => {
+                      setSelectedAccountId(e.target.value);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex-1 py-2 px-3 bg-slate-100 border border-slate-300 rounded-xl font-bold text-xs text-slate-800 focus:outline-none"
+                  >
+                    {accounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name} {acc.subtitle ? `(${acc.subtitle})` : ''}
+                      </option>
+                    ))}
+                  </select>
 
-        {/* View Mode 1: Exact Mobile Mockup as in the user screenshot */}
-        {viewMode === 'exact-mobile' && (
-          <div className="w-full flex flex-col items-center justify-center py-4">
-            <div className="mb-3 text-center no-print">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                معاينة شاشة الهاتف الجوال مطابقة تماماً للمرفق بالصورة
-              </span>
-            </div>
-
-            <MobileView
-              account={currentAccount}
-              transactions={displayTransactions}
-              onBack={() => setViewMode('dashboard')}
-              onOpenMenu={() => setIsVoucherModalOpen(true)}
-              onOpenHistory={() => {
-                alert(`سجل الحركات: ${displayTransactions.length} حركة مسجلة لحساب ${currentAccount.name}`);
-              }}
-            />
-          </div>
-        )}
-
-        {/* View Mode 2: Full Enterprise Dashboard View */}
-        {(viewMode === 'dashboard' || viewMode === 'print') && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 print:border-none print:shadow-none print:p-0">
-            {/* Account Details Header in Dashboard */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-4 border-b border-slate-200 gap-3 no-print">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl font-black text-slate-900">
-                    كشف حساب {currentAccount.name}
-                  </h2>
-                  {currentAccount.subtitle && (
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
-                      {currentAccount.subtitle}
-                    </span>
-                  )}
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsAccountModalOpen(true);
+                    }}
+                    className="px-3 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold flex items-center gap-1"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>حساب جديد</span>
+                  </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  الفترة: من تاريخ {currentAccount.startDate || '18/08/2026'} إلى تاريخ{' '}
-                  {currentAccount.endDate || '21/10/2026'} | الهاتف: {currentAccount.phone || 'غير مسجل'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Mobile Bottom Sheet: History & Summary Stats (🕒) */}
+      {isStatsOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs no-print">
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom-5 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <h3 className="font-black text-base text-slate-900">
+                ملخص حساب {currentAccount.name}
+              </h3>
+              <button
+                onClick={() => setIsStatsOpen(false)}
+                className="p-1 rounded-full text-slate-500 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <p className="text-xs font-bold text-slate-600">إجمالي له (دائن)</p>
+                <p className="text-lg font-black text-blue-700 mt-0.5">
+                  {formatAmount(totals.totalCredit, true)} {currentAccount.currency}
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setEditingAccount(currentAccount);
-                    setIsAccountModalOpen(true);
-                  }}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition"
-                >
-                  تعديل بيانات الحساب
-                </button>
+              <div className="p-3 bg-red-50 rounded-xl border border-red-100">
+                <p className="text-xs font-bold text-slate-600">إجمالي عليه (مدين)</p>
+                <p className="text-lg font-black text-red-600 mt-0.5">
+                  {formatAmount(totals.totalDebit, true)} {currentAccount.currency}
+                </p>
+              </div>
 
-                <button
-                  onClick={() => {
-                    setEditingTransaction(null);
-                    setIsVoucherModalOpen(true);
-                  }}
-                  className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
-                >
-                  <PlusCircle className="w-3.5 h-3.5" />
-                  <span>سند جديد</span>
-                </button>
+              <div className="col-span-2 p-3.5 bg-gradient-to-r from-cyan-100 to-cyan-50 rounded-xl border-2 border-[#00e5ff] flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-700">الرصيد النهائي الصافي</p>
+                  <p className="text-xl font-black text-slate-950 mt-0.5">
+                    {formatAmount(totals.finalBalance, true)} {currentAccount.currency}
+                    <span className="text-xs font-bold text-blue-700 mr-2">
+                      ({totals.finalBalance >= 0 ? 'لكم' : 'عليكم'})
+                    </span>
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 bg-[#00e5ff] text-slate-950 font-black text-xs rounded-lg shadow-xs">
+                  مطابق للصورة
+                </span>
               </div>
             </div>
 
-            {/* The Table Component */}
-            <StatementTable
-              transactions={displayTransactions}
-              currency={currentAccount.currency}
-              isEditable={true}
-              onEdit={(tx) => {
-                setEditingTransaction(tx);
-                setIsVoucherModalOpen(true);
-              }}
-              onDelete={handleDeleteTransaction}
-            />
+            <div className="text-center text-xs text-slate-500 font-semibold pt-1">
+              إجمالي الحركات المسجلة: {calculatedTransactions.length} حركة
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Printable Footer (visible only on print) */}
-        <PrintFooter />
-      </div>
+      {/* 7. Action Sheet when Tapping a Row (Edit or Delete) */}
+      {selectedRowAction && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs no-print">
+          <div
+            className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 space-y-4 animate-in slide-in-from-bottom-5 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+              <div>
+                <h3 className="font-black text-base text-slate-900">
+                  سند رقم #{selectedRowAction.voucherNo}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium">
+                  {selectedRowAction.date} - {selectedRowAction.voucherType}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedRowAction(null)}
+                className="p-1 rounded-full text-slate-500 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-      {/* 5. Modals */}
+            <div className="p-3 bg-slate-50 rounded-xl text-sm space-y-1">
+              <p>
+                <span className="font-bold text-slate-600">البيان: </span>
+                <span className="font-bold text-slate-900">{selectedRowAction.details || '—'}</span>
+              </p>
+              <p>
+                <span className="font-bold text-slate-600">المبلغ: </span>
+                <span
+                  className={`font-black ${
+                    selectedRowAction.voucherType === 'سند صرف' ? 'text-red-600' : 'text-blue-700'
+                  }`}
+                >
+                  {formatAmount(selectedRowAction.debit || selectedRowAction.credit)} {currentAccount.currency}
+                </span>
+              </p>
+              <p>
+                <span className="font-bold text-slate-600">الرصيد بعد الحركة: </span>
+                <span className="font-black text-slate-900">
+                  {formatAmount(selectedRowAction.balance)} {currentAccount.currency}
+                </span>
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setEditingTransaction(selectedRowAction);
+                  setSelectedRowAction(null);
+                  setIsVoucherModalOpen(true);
+                }}
+                className="py-2.5 px-4 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <Edit className="w-4 h-4" />
+                <span>تعديل السند</span>
+              </button>
+
+              <button
+                onClick={() => handleDeleteTransaction(selectedRowAction.id)}
+                className="py-2.5 px-4 bg-red-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 shadow-xs"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>حذف السند</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 8. Add/Edit Voucher Modal */}
       <AddVoucherModal
         isOpen={isVoucherModalOpen}
         onClose={() => {
@@ -587,15 +494,26 @@ export default function HomePage() {
         nextVoucherNo={nextVoucherNo}
       />
 
+      {/* 9. Account Modal */}
       <AccountModal
         isOpen={isAccountModalOpen}
-        onClose={() => {
-          setIsAccountModalOpen(false);
-          setEditingAccount(null);
+        onClose={() => setIsAccountModalOpen(false)}
+        onSave={(accData) => {
+          const newAcc: Account = {
+            id: accData.id || `acc-${Date.now()}`,
+            name: accData.name || 'حساب جديد',
+            subtitle: accData.subtitle || 'ورشة تفصيل',
+            phone: accData.phone || '',
+            currency: accData.currency || 'ريال',
+            startDate: '01/01/2026',
+            endDate: '31/12/2026',
+            transactions: [],
+          };
+          const updated = [...accounts, newAcc];
+          saveAccounts(updated);
+          setSelectedAccountId(newAcc.id);
         }}
-        onSave={handleSaveAccount}
-        initialAccount={editingAccount}
       />
-    </main>
+    </div>
   );
 }
